@@ -27,6 +27,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
+  const previousUserId = React.useRef<string | null>(null);
+
   useEffect(() => {
     if (!supabase) {
       setLoading(false);
@@ -36,13 +38,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const handleSession = async (currentSession: Session | null) => {
       setSession(currentSession);
       const currentUser = currentSession?.user ?? null;
-      setUser(currentUser);
       
-      if (currentUser?.email) {
-        const adminStatus = await checkIsSuperAdmin(currentUser.email);
-        setIsSuperAdmin(adminStatus);
-      } else {
-        setIsSuperAdmin(false);
+      if (previousUserId.current !== (currentUser?.id ?? null)) {
+        previousUserId.current = currentUser?.id ?? null;
+        setUser(currentUser);
+        
+        if (currentUser?.email) {
+          const adminStatus = await checkIsSuperAdmin(currentUser.email);
+          setIsSuperAdmin(adminStatus);
+        } else {
+          setIsSuperAdmin(false);
+        }
       }
       
       setLoading(false);
