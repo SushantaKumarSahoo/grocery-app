@@ -1,0 +1,175 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #16A34A;
+  --color-primary-hover: #15803d;
+  --color-primary-light: #dcfce7;
+  
+  --color-secondary: #1E3A8A;
+  --color-secondary-hover: #1e40af;
+  
+  --color-accent: #F59E0B;
+  --color-accent-hover: #d97706;
+  
+  --color-bg-main: #F8FAFC;
+  --color-bg-card: #FFFFFF;
+  --color-bg-hover: #f1f5f9;
+  
+  --color-text-main: #0f172a;
+  --color-text-muted: #64748b;
+  
+  --color-success: #10b981;
+  --color-success-bg: #d1fae5;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fef3c7;
+  --color-error: #ef4444;
+  --color-error-bg: #fee2e2;
+
+  --color-border: #e2e8f0;
+
+  --font-sans: 'Inter', sans-serif;
+  
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+/* Dark mode overrides */
+.dark {
+  --color-bg-main: #0f172a;
+  --color-bg-card: #1e293b;
+  --color-bg-hover: #334155;
+  
+  --color-text-main: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  
+  --color-border: #334155;
+  
+  --color-primary-light: #064e3b;
+  --color-success-bg: #064e3b;
+  --color-warning-bg: #78350f;
+  --color-error-bg: #7f1d1d;
+  
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Global transition for theme changes */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-main text-text-main font-sans antialiased;
+  }
+}
+
+@layer components {
+  .app-container {
+    @apply flex h-screen w-screen overflow-hidden;
+  }
+  
+  .sidebar {
+    @apply w-[260px] bg-bg-card border-r border-border flex flex-col transition-all duration-300 z-10;
+  }
+  
+  .main-content {
+    @apply flex-1 flex flex-col overflow-hidden;
+  }
+  
+  .topbar {
+    @apply h-16 bg-bg-card border-b border-border flex items-center justify-between px-6 shrink-0 z-10 transition-colors duration-300;
+  }
+  
+  .page-content {
+    @apply flex-1 overflow-y-auto p-6 transition-colors duration-300;
+  }
+  
+  .card {
+    @apply bg-bg-card rounded-md shadow-card border border-border p-5 transition-all duration-300;
+  }
+  .card:hover {
+    @apply shadow-md;
+  }
+  
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm font-medium text-sm transition-all duration-150;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-hover hover:-translate-y-[1px];
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-white hover:bg-secondary-hover hover:-translate-y-[1px];
+  }
+  
+  .btn-outline {
+    @apply bg-transparent text-text-main border border-border hover:bg-bg-hover;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent text-text-muted hover:bg-bg-hover hover:text-text-main;
+  }
+  
+  .input-group {
+    @apply flex flex-col gap-1.5 mb-4;
+  }
+  
+  .input-label {
+    @apply text-[13px] font-medium text-text-muted;
+  }
+  
+  .input-field {
+    @apply px-3 py-2.5 rounded-sm border border-border outline-none text-sm bg-bg-card text-text-main transition-all duration-150 focus:border-primary focus:ring-2 focus:ring-primary-light;
+  }
+  
+  .badge {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold;
+  }
+  
+  .badge-success { @apply bg-success-bg text-success; }
+  .badge-warning { @apply bg-warning-bg text-warning; }
+  .badge-error { @apply bg-error-bg text-error; }
+  .badge-primary { @apply bg-primary-light text-primary; }
+  
+  .table-container {
+    @apply w-full overflow-x-auto rounded-md border border-border bg-bg-card;
+  }
+  
+  .table {
+    @apply w-full border-collapse text-left;
+  }
+  
+  .table th {
+    @apply bg-bg-hover px-4 py-3 text-[13px] font-semibold text-text-muted border-b border-border uppercase tracking-wider;
+  }
+  
+  .table td {
+    @apply px-4 py-4 text-sm border-b border-border text-text-main;
+  }
+  
+  .table tr:last-child td {
+    @apply border-b-0;
+  }
+  
+  .table tr:hover td {
+    @apply bg-bg-hover;
+  }
+
+  /* Dark mode toggle animation */
+  .theme-toggle {
+    @apply relative w-14 h-7 rounded-full cursor-pointer transition-colors duration-300;
+    background-color: var(--color-border);
+  }
+  .theme-toggle.active {
+    background-color: var(--color-secondary);
+  }
+  .theme-toggle-knob {
+    @apply absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center transition-all duration-300;
+  }
+  .theme-toggle.active .theme-toggle-knob {
+    transform: translateX(28px);
+  }
+}
