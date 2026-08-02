@@ -55,7 +55,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setLoading(true);
+      // Don't set loading to true on every event (like token refreshes on tab switch)
+      // to avoid full page reloads/spinners.
       handleSession(session);
     });
 
