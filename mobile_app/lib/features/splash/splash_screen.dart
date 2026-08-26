@@ -3,8 +3,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/widgets/animated_blobs.dart';
-import '../../core/widgets/orbit_loader.dart';
+import '../../core/widgets/ikat_loader.dart';
+import '../../core/widgets/ikat_pattern.dart';
+import '../../core/widgets/odisha_landmarks.dart';
 import '../../providers/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -33,8 +36,21 @@ class _SplashScreenState extends State<SplashScreen> {
             decoration: BoxDecoration(gradient: AppColors.heroGradient),
           ),
           const AnimatedBlobs(
-            colors: [Colors.white, Color(0xFFFDE68A), Color(0xFFA78BFA)],
+            colors: [Color(0xFFEACB7C), Color(0xFFC1502E), Colors.white],
             opacity: 0.20,
+          ),
+          const IkatWeaveBackdrop(color: Colors.white, opacity: 0.11, spacing: 30),
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 170,
+            child: OdishaSkylineBackdrop(
+              color: Colors.white,
+              opacity: 0.34,
+              rich: true,
+              richColors: [Color(0xFFEACB7C), Color(0xFFC98A2C)],
+            ),
           ),
           Center(
             child: Column(
@@ -46,29 +62,12 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Outer soft pulsing glow.
+                      // Outer diamond ring, slow clockwise turn.
                       Container(
-                            width: 150,
-                            height: 150,
+                            width: 128,
+                            height: 128,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withValues(alpha: 0.10),
-                            ),
-                          )
-                          .animate(onPlay: (c) => c.repeat(reverse: true))
-                          .scale(
-                            begin: const Offset(0.85, 0.85),
-                            end: const Offset(1.08, 1.08),
-                            duration: 1800.ms,
-                            curve: Curves.easeInOut,
-                          )
-                          .fadeIn(duration: 600.ms),
-                      // Slow outer ring, clockwise.
-                      Container(
-                            width: 132,
-                            height: 132,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
+                              borderRadius: BorderRadius.circular(22),
                               border: Border.all(
                                 color: Colors.white.withValues(alpha: 0.30),
                                 width: 1.2,
@@ -76,44 +75,54 @@ class _SplashScreenState extends State<SplashScreen> {
                             ),
                           )
                           .animate(onPlay: (c) => c.repeat())
-                          .rotate(duration: 7000.ms, curve: Curves.linear),
-                      // Dashed-look inner ring, counter-rotating.
+                          .rotate(duration: 8000.ms, curve: Curves.linear)
+                          .animate(onPlay: (c) => c.repeat(reverse: true))
+                          .scale(
+                            begin: const Offset(0.94, 0.94),
+                            end: const Offset(1.04, 1.04),
+                            duration: 2000.ms,
+                            curve: Curves.easeInOut,
+                          ),
+                      // Inner diamond, counter-rotating in antique gold.
                       Container(
-                            width: 112,
-                            height: 112,
+                            width: 100,
+                            height: 100,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
+                              borderRadius: BorderRadius.circular(18),
                               border: Border.all(
-                                color: AppColors.accent.withValues(alpha: 0.55),
+                                color: AppColors.accent.withValues(alpha: 0.65),
                                 width: 1.6,
                               ),
                             ),
                           )
                           .animate(onPlay: (c) => c.repeat())
                           .rotate(
-                            begin: 1,
-                            end: 0,
-                            duration: 5000.ms,
+                            begin: 0.98,
+                            end: 0.23,
+                            duration: 6000.ms,
                             curve: Curves.linear,
                           ),
+                      // Brand tile — gold-thread tile with a woven rosette mark.
                       Container(
-                            width: 96,
-                            height: 96,
+                            width: 92,
+                            height: 92,
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(28),
+                              gradient: AppColors.goldGradient,
+                              borderRadius: BorderRadius.circular(26),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
+                                  color: Colors.black.withValues(alpha: 0.20),
                                   blurRadius: 30,
                                   offset: const Offset(0, 12),
                                 ),
                               ],
                             ),
-                            child: const Icon(
-                              Icons.shopping_basket_rounded,
-                              size: 48,
-                              color: AppColors.primary,
+                            child: const Center(
+                              child: IkatRosette(
+                                size: 46,
+                                color: AppColors.primaryDark,
+                                strokeWidth: 2.4,
+                              ),
                             ),
                           )
                           .animate()
@@ -138,15 +147,15 @@ class _SplashScreenState extends State<SplashScreen> {
                 const SizedBox(height: 28),
                 Shimmer.fromColors(
                       baseColor: Colors.white,
-                      highlightColor: Colors.white.withValues(alpha: 0.4),
+                      highlightColor: AppColors.accentLight,
                       period: const Duration(milliseconds: 1800),
-                      child: const Text(
+                      child: Text(
                         'BulkMart',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 30,
+                        style: AppFonts.display(
+                          fontSize: 32,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     )
@@ -168,7 +177,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
                 const SizedBox(height: 56),
-                OrbitLoader(
+                IkatLoader(
                   size: 34,
                   color: Colors.white,
                 ).animate().fadeIn(delay: 700.ms),

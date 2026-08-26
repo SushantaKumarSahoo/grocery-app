@@ -7,7 +7,47 @@ class ProductCategory {
   const ProductCategory({required this.name, this.productCount = 0});
 
   IconData get icon => categoryIcon(name);
+
+  /// Null for shop-tagged categories outside the fixed taxonomy below —
+  /// callers fall back to [icon] when there's no photo.
+  String? get imageUrl => categoryImageUrl(name);
 }
+
+/// Representative photo per fixed category (Pexels, free-to-use). Only
+/// covers [staticCategories] — free-text shop categories fall back to an
+/// icon since there's no photo to look up for those.
+const Map<String, String> _categoryImages = {
+  'Rice':
+      'https://images.pexels.com/photos/1311771/pexels-photo-1311771.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Dal':
+      'https://images.pexels.com/photos/12737916/pexels-photo-12737916.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Salt':
+      'https://images.pexels.com/photos/8991461/pexels-photo-8991461.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Sugar':
+      'https://images.pexels.com/photos/19243767/pexels-photo-19243767.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Dairy Grocery Items':
+      'https://images.pexels.com/photos/4324320/pexels-photo-4324320.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Spices/Masala items':
+      'https://images.pexels.com/photos/10126645/pexels-photo-10126645.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Flours':
+      'https://images.pexels.com/photos/6287581/pexels-photo-6287581.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Oil':
+      'https://images.pexels.com/photos/7953254/pexels-photo-7953254.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Dry fruits':
+      'https://images.pexels.com/photos/9811639/pexels-photo-9811639.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Sweetener':
+      'https://images.pexels.com/photos/19243767/pexels-photo-19243767.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Sauces':
+      'https://images.pexels.com/photos/6605175/pexels-photo-6605175.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Papad':
+      'https://images.pexels.com/photos/12737803/pexels-photo-12737803.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Plates & glasses':
+      'https://images.pexels.com/photos/2019859/pexels-photo-2019859.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'Other individual items':
+      'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=400',
+};
+
+String? categoryImageUrl(String name) => _categoryImages[name];
 
 /// Best-effort icon lookup for a free-text category name coming from the
 /// shop owner's product catalog (categories are shop-scoped free text,
@@ -18,23 +58,20 @@ IconData categoryIcon(String name) {
   if (n.contains('dal') || n.contains('pulse') || n.contains('lentil')) {
     return Icons.grain_rounded;
   }
+  if (n.contains('salt')) return Icons.science_rounded;
   if (n.contains('flour') || n.contains('atta')) return Icons.bakery_dining_rounded;
   if (n.contains('oil') || n.contains('ghee')) return Icons.opacity_rounded;
-  if (n.contains('veg')) return Icons.eco_rounded;
-  if (n.contains('fruit')) return Icons.apple_rounded;
   if (n.contains('dairy') || n.contains('milk') || n.contains('paneer')) {
     return Icons.icecream_rounded;
   }
-  if (n.contains('sugar') || n.contains('jaggery')) return Icons.cookie_rounded;
+  if (n.contains('sugar') || n.contains('jaggery') || n.contains('sweet')) return Icons.cookie_rounded;
   if (n.contains('spice') || n.contains('masala')) {
     return Icons.local_fire_department_rounded;
   }
   if (n.contains('dry fruit') || n.contains('nut')) return Icons.scatter_plot_rounded;
-  if (n.contains('dispos')) return Icons.inventory_2_rounded;
-  if (n.contains('water')) return Icons.water_drop_rounded;
-  if (n.contains('beverage') || n.contains('drink') || n.contains('juice')) {
-    return Icons.local_cafe_rounded;
-  }
+  if (n.contains('sauce') || n.contains('ketchup')) return Icons.water_drop_rounded;
+  if (n.contains('papad')) return Icons.pie_chart_rounded;
+  if (n.contains('plate') || n.contains('glass') || n.contains('dispos')) return Icons.inventory_2_rounded;
   return Icons.category_rounded;
 }
 
@@ -46,17 +83,18 @@ IconData categoryIcon(String name) {
 const List<ProductCategory> staticCategories = [
   ProductCategory(name: 'Rice'),
   ProductCategory(name: 'Dal'),
-  ProductCategory(name: 'Flour'),
-  ProductCategory(name: 'Oil'),
-  ProductCategory(name: 'Vegetables'),
-  ProductCategory(name: 'Fruits'),
-  ProductCategory(name: 'Dairy'),
+  ProductCategory(name: 'Salt'),
   ProductCategory(name: 'Sugar'),
-  ProductCategory(name: 'Spices'),
-  ProductCategory(name: 'Dry Fruits'),
-  ProductCategory(name: 'Disposable Items'),
-  ProductCategory(name: 'Water Bottles'),
-  ProductCategory(name: 'Beverages'),
+  ProductCategory(name: 'Dairy Grocery Items'),
+  ProductCategory(name: 'Spices/Masala items'),
+  ProductCategory(name: 'Flours'),
+  ProductCategory(name: 'Oil'),
+  ProductCategory(name: 'Dry fruits'),
+  ProductCategory(name: 'Sweetener'),
+  ProductCategory(name: 'Sauces'),
+  ProductCategory(name: 'Papad'),
+  ProductCategory(name: 'Plates & glasses'),
+  ProductCategory(name: 'Other individual items'),
 ];
 
 class Occasion {
@@ -84,3 +122,22 @@ const List<Occasion> occasions = [
   Occasion(id: 'restaurant', name: 'Restaurant', icon: Icons.restaurant_rounded),
   Occasion(id: 'catering', name: 'Catering', icon: Icons.soup_kitchen_rounded),
 ];
+
+/// Occasions grouped as "Celebrations" for the homepage toggle AND as
+/// "event" orders for payment-method purposes (advance-online is only
+/// offered for these; everything else is treated as a "business" order —
+/// cheque/cash on delivery only). Matched by occasion id.
+///
+/// Mirrored server-side in supabase/functions/_shared/occasions.ts (there
+/// is no shared package between the Deno Edge Functions and this Flutter
+/// app) — that copy matches by occasion *name* lowercased, since
+/// `orders.occasion` stores the name (e.g. "Wedding"), not the id. Keep
+/// both in sync if this set ever changes.
+const celebrationOccasionIds = {'wedding', 'birthday', 'reception'};
+
+bool isEventOccasionName(String occasion) {
+  final normalized = occasion.trim().toLowerCase();
+  return occasions.any(
+    (o) => celebrationOccasionIds.contains(o.id) && o.name.toLowerCase() == normalized,
+  );
+}

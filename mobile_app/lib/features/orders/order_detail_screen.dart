@@ -311,6 +311,26 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
+                if (order.status == OrderStatus.accepted && order.paymentMethod == null) ...[
+                  _PaymentPromptBanner(
+                    message: 'Choose how you\'d like to pay the advance to move this order forward.',
+                    buttonLabel: 'Choose Payment Method',
+                    onTap: () => context
+                        .push('/payment/${order.id}')
+                        .then((_) => _reload()),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (order.status == OrderStatus.ready && order.paymentStatus != 'paid') ...[
+                  _PaymentPromptBanner(
+                    message: 'Complete the final payment to receive your delivery.',
+                    buttonLabel: 'Complete Final Payment',
+                    onTap: () => context
+                        .push('/payment/${order.id}')
+                        .then((_) => _reload()),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 OutlinedButton.icon(
                   onPressed: _openingChat ? null : () => _chatWithShop(order),
                   icon: _openingChat
@@ -329,6 +349,48 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _PaymentPromptBanner extends StatelessWidget {
+  final String message;
+  final String buttonLabel;
+  final VoidCallback onTap;
+
+  const _PaymentPromptBanner({
+    required this.message,
+    required this.buttonLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: colors.isDark ? 0.18 : 0.10),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.payments_rounded, color: AppColors.warning),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(fontSize: 12.5, color: colors.textSecondary, height: 1.4),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: onTap,
+            child: Text(buttonLabel, style: const TextStyle(fontSize: 12.5)),
+          ),
+        ],
       ),
     );
   }

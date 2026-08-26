@@ -3,9 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_ext.dart';
 import '../../core/widgets/animated_blobs.dart';
+import '../../core/widgets/ikat_pattern.dart';
 import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/tilt_card.dart';
 import '../../providers/auth_provider.dart';
 
 class _OnboardPage {
@@ -69,10 +72,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Positioned.fill(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 500),
-              child: AnimatedBlobs(
+              child: Stack(
                 key: ValueKey(_index),
-                colors: page.gradient.colors,
-                opacity: colors.isDark ? 0.16 : 0.10,
+                children: [
+                  AnimatedBlobs(
+                    colors: page.gradient.colors,
+                    opacity: colors.isDark ? 0.16 : 0.10,
+                  ),
+                  IkatWeaveBackdrop(
+                    color: page.gradient.colors.first,
+                    opacity: colors.isDark ? 0.13 : 0.11,
+                    spacing: 30,
+                  ),
+                ],
               ),
             ),
           ),
@@ -101,21 +113,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 180,
-                              height: 180,
-                              decoration: BoxDecoration(
-                                gradient: page.gradient,
-                                borderRadius: BorderRadius.circular(40),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: page.gradient.colors.first.withValues(alpha: 0.35),
-                                    blurRadius: 28,
-                                    offset: const Offset(0, 14),
-                                  ),
-                                ],
+                            TiltCard(
+                              child: Container(
+                                width: 180,
+                                height: 180,
+                                decoration: BoxDecoration(
+                                  gradient: page.gradient,
+                                  borderRadius: BorderRadius.circular(40),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: page.gradient.colors.first.withValues(alpha: 0.35),
+                                      blurRadius: 28,
+                                      offset: const Offset(0, 14),
+                                    ),
+                                  ],
+                                ),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Positioned.fill(
+                                      child: IkatWeaveBackdrop(
+                                        color: Colors.white,
+                                        opacity: 0.10,
+                                        spacing: 26,
+                                      ),
+                                    ),
+                                    Icon(page.icon, size: 76, color: Colors.white),
+                                  ],
+                                ),
                               ),
-                              child: Icon(page.icon, size: 76, color: Colors.white),
                             )
                                 .animate(key: ValueKey('icon$i'))
                                 .fadeIn(duration: 450.ms)
@@ -130,9 +156,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             Text(
                               page.title,
                               textAlign: TextAlign.center,
-                              style: TextStyle(
+                              style: AppFonts.display(
                                 fontSize: 24,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w700,
                                 color: colors.textPrimary,
                               ),
                             )

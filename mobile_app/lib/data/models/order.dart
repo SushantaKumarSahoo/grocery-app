@@ -127,6 +127,7 @@ class Quotation {
   final double gstAmount;
   final double discountAmount;
   final double grandTotal;
+  final double advanceAmount;
   final String notes;
   final String status;
 
@@ -140,6 +141,7 @@ class Quotation {
     required this.gstAmount,
     required this.discountAmount,
     required this.grandTotal,
+    this.advanceAmount = 0,
     required this.notes,
     required this.status,
   });
@@ -158,6 +160,7 @@ class Quotation {
       gstAmount: (map['gst_amount'] as num?)?.toDouble() ?? 0,
       discountAmount: (map['discount_amount'] as num?)?.toDouble() ?? 0,
       grandTotal: (map['grand_total'] as num?)?.toDouble() ?? 0,
+      advanceAmount: (map['advance_amount'] as num?)?.toDouble() ?? 0,
       notes: map['notes'] as String? ?? '',
       status: map['status'] as String? ?? 'draft',
     );
@@ -179,6 +182,9 @@ class BulkOrder {
   final OrderStatus status;
   final double totalAmount;
   final List<OrderLineItem> items;
+  final String? paymentMethod;
+  final String paymentStatus;
+  final double advanceAmount;
 
   const BulkOrder({
     required this.id,
@@ -195,6 +201,9 @@ class BulkOrder {
     required this.status,
     required this.totalAmount,
     required this.items,
+    this.paymentMethod,
+    this.paymentStatus = 'not_required',
+    this.advanceAmount = 0,
   });
 
   factory BulkOrder.fromMap(Map<String, dynamic> map) {
@@ -218,6 +227,9 @@ class BulkOrder {
       items: rawItems
           .map((e) => OrderLineItem.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList(),
+      paymentMethod: map['payment_method'] as String?,
+      paymentStatus: map['payment_status'] as String? ?? 'not_required',
+      advanceAmount: (map['advance_amount'] as num?)?.toDouble() ?? 0,
     );
   }
 }

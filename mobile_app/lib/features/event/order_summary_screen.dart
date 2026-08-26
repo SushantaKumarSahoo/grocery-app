@@ -8,6 +8,7 @@ import '../../core/widgets/screen_backdrop.dart';
 import '../../data/models/order.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/location_provider.dart';
 import '../../providers/order_provider.dart';
 
 class OrderSummaryScreen extends StatefulWidget {
@@ -25,6 +26,22 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
     if (profile == null) return;
     final cart = context.read<CartProvider>();
     if (cart.items.isEmpty) return;
+
+    if (!context.read<LocationProvider>().canOrder) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: const Text(
+            'We don\'t deliver to your area yet. Check delivery availability to place this order.',
+          ),
+          action: SnackBarAction(
+            label: 'Check',
+            onPressed: () => context.push('/location-check'),
+          ),
+        ),
+      );
+      return;
+    }
 
     setState(() => _submitting = true);
     final orderProvider = context.read<OrderProvider>();
@@ -106,14 +123,42 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
     final cart = context.watch<CartProvider>();
     final ed = cart.eventDetails;
     final colors = context.colors;
+    final canOrder = context.watch<LocationProvider>().canOrder;
 
     return Scaffold(
       backgroundColor: colors.bg,
       appBar: AppBar(title: const Text('Order Summary')),
       body: ScreenBackdrop(
+        themed: true,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           children: [
+            if (!canOrder)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: colors.isDark ? 0.18 : 0.10),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_off_rounded, color: AppColors.warning, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'We don\'t deliver to your area yet. You can review this order, but placing it is blocked until your location is serviceable.',
+                        style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.4),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.push('/location-check'),
+                      child: const Text('Check', style: TextStyle(fontSize: 12.5)),
+                    ),
+                  ],
+                ),
+              ),
             _sectionCard(
               title: 'Event Details',
               child: Column(

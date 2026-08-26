@@ -13,6 +13,15 @@ class CartProvider extends ChangeNotifier {
 
   double get subtotal => _items.fold(0, (sum, i) => sum + i.subtotal);
 
+  /// Sets the shopping occasion and notifies listeners — used instead of
+  /// mutating `eventDetails.occasion` directly so themed screens (see
+  /// ScreenBackdrop's `themed` flag) pick up the change immediately even
+  /// if they were already on screen when it was picked.
+  void setOccasion(String occasionName) {
+    eventDetails.occasion = occasionName;
+    notifyListeners();
+  }
+
   void addItem(Product product, double quantity, {String? packaging, String? notes}) {
     final existingIndex = _items.indexWhere((i) => i.product.id == product.id);
     if (existingIndex >= 0) {

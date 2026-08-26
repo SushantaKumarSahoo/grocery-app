@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:location/location.dart' as loc;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_ext.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -12,6 +13,8 @@ class PickedLocation {
   final String address;
   const PickedLocation({required this.point, required this.address});
 }
+
+enum _LocationErrorKind { none, serviceDisabled, permissionDenied, other }
 
 /// Full-screen map picker: drag the map to move a fixed center pin, or jump
 /// to the device's current location, then confirm to reverse-geocode the
@@ -31,6 +34,7 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
   bool _locating = false;
   bool _resolving = false;
   String? _error;
+  _LocationErrorKind _errorKind = _LocationErrorKind.none;
 
   @override
   void initState() {
@@ -38,32 +42,48 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _useCurrentLocation(silent: true));
   }
 
+  void _fail(_LocationErrorKind kind, String message, bool silent) {
+    if (silent || !mounted) return;
+    setState(() {
+      _errorKind = kind;
+      _error = message;
+    });
+  }
+
   Future<void> _useCurrentLocation({bool silent = false}) async {
     setState(() {
       _locating = true;
       _error = null;
+      _errorKind = _LocationErrorKind.none;
     });
     try {
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final location = loc.Location();
+
+      var serviceEnabled = await location.serviceEnabled();
       if (!serviceEnabled) {
-        throw 'Location services are turned off';
+        // Shows Android's native "Turn on Location" resolution dialog
+        // in-app instead of just failing silently.
+        serviceEnabled = silent ? false : await location.requestService();
+        if (!serviceEnabled) {
+          _fail(_LocationErrorKind.serviceDisabled, 'Location services are turned off', silent);
+          return;
+        }
       }
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
+      var permission = await location.hasPermission();
+      if (permission == loc.PermissionStatus.denied) {
+        permission = await location.requestPermission();
       }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        throw 'Location permission denied';
+      if (permission == loc.PermissionStatus.denied ||
+          permission == loc.PermissionStatus.deniedForever) {
+        _fail(_LocationErrorKind.permissionDenied, 'Location permission denied', silent);
+        return;
       }
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-      );
-      final point = LatLng(position.latitude, position.longitude);
+      final locData = await location.getLocation();
+      final point = LatLng(locData.latitude, locData.longitude);
       _mapController.move(point, 16);
       setState(() => _center = point);
     } catch (e) {
-      if (!silent) setState(() => _error = e.toString());
+      _fail(_LocationErrorKind.other, e.toString(), silent);
     } finally {
       if (mounted) setState(() => _locating = false);
     }
@@ -159,7 +179,28 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  child: Text(_error!, style: const TextStyle(color: Colors.white, fontSize: 12.5)),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(color: Colors.white, fontSize: 12.5),
+                        ),
+                      ),
+                      if (_errorKind == _LocationErrorKind.serviceDisabled)
+                        TextButton(
+                          onPressed: () => Geolocator.openLocationSettings(),
+                          style: TextButton.styleFrom(foregroundColor: Colors.white),
+                          child: const Text('Turn On'),
+                        )
+                      else if (_errorKind == _LocationErrorKind.permissionDenied)
+                        TextButton(
+                          onPressed: () => Geolocator.openAppSettings(),
+                          style: TextButton.styleFrom(foregroundColor: Colors.white),
+                          child: const Text('Settings'),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),

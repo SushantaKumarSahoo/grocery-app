@@ -14,6 +14,8 @@ import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard';
 import SuperAdminShops from './pages/super-admin/Shops';
 import SuperAdminAdmins from './pages/super-admin/Admins';
 import SuperAdminAnalytics from './pages/super-admin/Analytics';
+import SuperAdminServiceableAreas from './pages/super-admin/ServiceableAreas';
+import SuperAdminPayments from './pages/super-admin/Payments';
 import SuperAdminSettings from './pages/super-admin/Settings';
 import SuperAdminSupport from './pages/super-admin/Support';
 import LandingPage from './pages/LandingPage';
@@ -50,6 +52,8 @@ function App() {
                 <Route path="shops" element={<SuperAdminShops />} />
                 <Route path="admins" element={<SuperAdminAdmins />} />
                 <Route path="analytics" element={<SuperAdminAnalytics />} />
+                <Route path="serviceable-areas" element={<SuperAdminServiceableAreas />} />
+                <Route path="payments" element={<SuperAdminPayments />} />
                 <Route path="support" element={<SuperAdminSupport />} />
                 <Route path="settings" element={<SuperAdminSettings />} />
               </Route>

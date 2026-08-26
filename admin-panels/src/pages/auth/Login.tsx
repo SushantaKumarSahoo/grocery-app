@@ -1,9 +1,32 @@
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function Login() {
-  const { signInWithGoogle, user, loading } = useAuth();
+  const { signInWithGoogle, signInWithPassword, user, loading, isSuperAdmin } = useAuth();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError(null);
+    const { error } = await signInWithPassword(email, password);
+    if (error) {
+      setError(error.message);
+      setIsSubmitting(false);
+    }
+    // If successful, the AuthContext's onAuthStateChange will trigger a re-render and navigate away
+  };
 
   if (loading) {
     return (
@@ -17,6 +40,9 @@ export default function Login() {
   }
 
   if (user) {
+    if (isSuperAdmin) {
+      return <Navigate to="/super-admin" replace />;
+    }
     return <Navigate to="/admin" replace />;
   }
 
@@ -101,14 +127,33 @@ export default function Login() {
             <div className="flex-1 h-px bg-border"></div>
           </div>
 
-          <form className="mt-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
+          <form className="mt-6 space-y-4" onSubmit={handleEmailLogin}>
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                {error}
+              </div>
+            )}
             <div className="input-group">
               <label className="input-label">Email address</label>
-              <input type="email" placeholder="admin@yourstore.com" className="input-field" />
+              <input 
+                type="email" 
+                placeholder="admin@yourstore.com" 
+                className="input-field" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <div className="input-group">
               <label className="input-label">Password</label>
-              <input type="password" placeholder="••••••••" className="input-field" />
+              <input 
+                type="password" 
+                placeholder="••••••••" 
+                className="input-field" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 text-text-muted cursor-pointer">
@@ -117,8 +162,19 @@ export default function Login() {
               </label>
               <a href="#" className="text-primary font-medium hover:underline">Forgot password?</a>
             </div>
-            <button type="submit" className="btn btn-primary w-full py-3 text-base shadow-md shadow-primary/20">
-              Sign In
+            <button 
+              type="submit" 
+              className="btn btn-primary w-full py-3 text-base shadow-md shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </form>
 

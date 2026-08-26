@@ -100,6 +100,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       backgroundColor: colors.bg,
       appBar: AppBar(title: const Text('Event Details')),
       body: ScreenBackdrop(
+        themed: true,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           children: [

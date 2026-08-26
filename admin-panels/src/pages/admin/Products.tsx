@@ -6,7 +6,7 @@ import EmptyState from '../../components/EmptyState';
 import ImageUpload from '../../components/ImageUpload';
 
 const UNITS = ['KG', 'Litre', 'Piece', 'Dozen', 'Packet', 'Box', 'Bag'];
-const DEFAULT_CATEGORIES = ['Rice', 'Dal', 'Flour', 'Oil', 'Vegetables', 'Fruits', 'Dairy', 'Sugar', 'Spices', 'Dry Fruits', 'Disposable Items', 'Water Bottles', 'Beverages'];
+const DEFAULT_CATEGORIES = ['Rice', 'Dal', 'Salt', 'Sugar', 'Dairy Grocery Items', 'Spices/Masala items', 'Flours', 'Oil', 'Dry fruits', 'Sweetener', 'Sauces', 'Papad', 'Plates & glasses', 'Other individual items'];
 
 export default function Products() {
   const { shop } = useShop();
@@ -22,7 +22,7 @@ export default function Products() {
 
   const [form, setForm] = useState({
     name: '', description: '', category_name: '', price: '', unit: 'KG',
-    min_order_qty: '1', stock: '0', packaging: '', image_url: '',
+    packaging: '', image_url: '',
   });
 
   useEffect(() => { if (shop) load(); }, [shop]);
@@ -39,7 +39,7 @@ export default function Products() {
 
   function openAdd() {
     setEditing(null);
-    setForm({ name: '', description: '', category_name: '', price: '', unit: 'KG', min_order_qty: '1', stock: '0', packaging: '', image_url: '' });
+    setForm({ name: '', description: '', category_name: '', price: '', unit: 'KG', packaging: '', image_url: '' });
     setShowModal(true);
   }
 
@@ -47,8 +47,7 @@ export default function Products() {
     setEditing(p);
     setForm({
       name: p.name, description: p.description || '', category_name: p.category_name || '',
-      price: String(p.price || ''), unit: p.unit || 'KG', min_order_qty: String(p.min_order_qty || 1),
-      stock: String(p.stock || 0), packaging: p.packaging || '', image_url: p.image_url || '',
+      price: String(p.price || ''), unit: p.unit || 'KG', packaging: p.packaging || '', image_url: p.image_url || '',
     });
     setShowModal(true);
   }
@@ -64,8 +63,8 @@ export default function Products() {
         category_name: form.category_name,
         price: parseFloat(form.price),
         unit: form.unit,
-        min_order_qty: parseFloat(form.min_order_qty),
-        stock: parseFloat(form.stock),
+        min_order_qty: 1,
+        stock: 9999,
         packaging: form.packaging,
         image_url: form.image_url,
       };
@@ -144,8 +143,6 @@ export default function Products() {
                 <th>Category</th>
                 <th>Price</th>
                 <th>Unit</th>
-                <th>MOQ</th>
-                <th>Stock</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -168,12 +165,6 @@ export default function Products() {
                   <td><span className="badge badge-primary">{p.category_name || '—'}</span></td>
                   <td className="font-semibold">₹{p.price}</td>
                   <td>{p.unit}</td>
-                  <td>{p.min_order_qty}</td>
-                  <td>
-                    <span className={`badge ${p.stock > 10 ? 'badge-success' : p.stock > 0 ? 'badge-warning' : 'badge-error'}`}>
-                      {p.stock > 0 ? p.stock : 'Out'}
-                    </span>
-                  </td>
                   <td>
                     <div className="flex items-center gap-1">
                       <button onClick={() => openEdit(p)} className="p-2 hover:bg-bg-hover rounded transition-colors text-text-muted hover:text-primary"><Edit2 size={16} /></button>
@@ -215,12 +206,8 @@ export default function Products() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="input-group"><label className="input-label">Min Order Qty</label><input type="number" value={form.min_order_qty} onChange={e => setForm({...form, min_order_qty: e.target.value})} className="input-field" /></div>
-                <div className="input-group"><label className="input-label">Stock</label><input type="number" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="input-field" /></div>
-              </div>
               <div className="input-group"><label className="input-label">Packaging</label><input value={form.packaging} onChange={e => setForm({...form, packaging: e.target.value})} className="input-field" placeholder="e.g. 25kg bag, 5L can" /></div>
-              <ImageUpload value={form.image_url} onChange={url => setForm({...form, image_url: url})} label="Product Image" />
+              <ImageUpload value={form.image_url} onChange={url => setForm({...form, image_url: url})} label="Product Image URL (Upload or Paste Link)" />
             </div>
             <div className="flex justify-end gap-2 p-5 border-t border-border">
               <button onClick={() => setShowModal(false)} className="btn btn-outline">Cancel</button>

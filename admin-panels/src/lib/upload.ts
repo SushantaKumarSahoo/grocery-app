@@ -12,7 +12,7 @@
 
 // Configure your upload provider here
 type UploadProvider = 'local' | 'aws_s3' | 'gcp';
-const UPLOAD_PROVIDER: UploadProvider = 'local';
+const UPLOAD_PROVIDER: UploadProvider = 'gcp';
 
 // AWS S3 Config (fill when ready)
 // const AWS_S3_BUCKET = '';
@@ -87,21 +87,30 @@ async function uploadToAWS(_file: File): Promise<string> {
  * 3. Upload the file to that URL
  * 4. Return the public GCS URL
  */
-async function uploadToGCP(_file: File): Promise<string> {
-  // Example implementation:
-  //
-  // const { url, publicUrl } = await fetch('/api/gcs/sign', {
-  //   method: 'POST',
-  //   body: JSON.stringify({ filename: file.name, contentType: file.type }),
-  // }).then(r => r.json());
-  //
-  // await fetch(url, {
-  //   method: 'PUT',
-  //   body: file,
-  //   headers: { 'Content-Type': file.type },
-  // });
-  //
-  // return publicUrl;
+async function uploadToGCP(file: File): Promise<string> {
+  // 1. Get signed URL from Supabase Edge Function
+  const { supabase } = await import('./supabase');
+  if (!supabase) throw new Error('Supabase client not initialized');
 
-  throw new Error('GCP Storage upload not configured. Set up your GCS bucket and update lib/upload.ts');
+  const { data, error } = await supabase.functions.invoke('gcp-signed-url', {
+    body: { filename: file.name, contentType: file.type },
+  });
+
+  if (error || !data?.url) {
+    throw new Error(error?.message || data?.error || 'Failed to get signed URL');
+  }
+
+  // 2. Upload file directly to GCP
+  const uploadRes = await fetch(data.url, {
+    method: 'PUT',
+    body: file,
+    headers: { 'Content-Type': file.type },
+  });
+
+  if (!uploadRes.ok) {
+    throw new Error('Failed to upload image to GCP Storage');
+  }
+
+  // 3. Return public URL
+  return data.publicUrl;
 }

@@ -15,6 +15,7 @@ class CategoriesScreen extends StatelessWidget {
       backgroundColor: context.colors.bg,
       appBar: AppBar(title: const Text('Categories')),
       body: ScreenBackdrop(
+        themed: true,
         child: GridView.builder(
           padding: const EdgeInsets.all(20),
           itemCount: staticCategories.length,

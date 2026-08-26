@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_ext.dart';
@@ -73,29 +74,35 @@ class FloatingNavBar extends StatelessWidget {
             builder: (context, constraints) {
               final slotWidth = constraints.maxWidth / items.length;
               final pillSize = docked ? 46.0 : 52.0;
+              // Side length of the (unrotated) square so that once rotated
+              // 45° into a diamond, its footprint roughly matches pillSize.
+              final diamondSize = pillSize * 0.72;
               return Stack(
                 alignment: Alignment.centerLeft,
                 children: [
                   AnimatedPositioned(
                     duration: _animDuration,
                     curve: _animCurve,
-                    left: slotWidth * currentIndex + (slotWidth - pillSize) / 2,
-                    top: (constraints.maxHeight - pillSize) / 2,
-                    child: AnimatedContainer(
-                      duration: _animDuration,
-                      curve: _animCurve,
-                      width: pillSize,
-                      height: pillSize,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.heroGradient,
-                        borderRadius: BorderRadius.circular(docked ? 16 : 20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.35),
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
+                    left: slotWidth * currentIndex + (slotWidth - diamondSize) / 2,
+                    top: (constraints.maxHeight - diamondSize) / 2,
+                    child: Transform.rotate(
+                      angle: math.pi / 4,
+                      child: AnimatedContainer(
+                        duration: _animDuration,
+                        curve: _animCurve,
+                        width: diamondSize,
+                        height: diamondSize,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.heroGradient,
+                          borderRadius: BorderRadius.circular(docked ? 10 : 12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.secondary.withValues(alpha: 0.35),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

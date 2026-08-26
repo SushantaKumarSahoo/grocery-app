@@ -1,37 +1,45 @@
 import 'package:flutter/material.dart';
 
+/// "Sambalpuri Ikat" palette — indigo warp threads, rust-orange weft,
+/// antique gold accents, warm handloom-cream surfaces. Inspired by the
+/// tie-dye geometry of Odisha's Sambalpuri weave rather than a generic
+/// green-grocer template.
 class AppColors {
   AppColors._();
 
-  static const Color primary = Color(0xFF16A34A);
-  static const Color primaryDark = Color(0xFF15803D);
-  static const Color primaryLight = Color(0xFFDCFCE7);
+  // Indigo — the warp thread. Primary brand color.
+  static const Color primary = Color(0xFF2B3A67);
+  static const Color primaryDark = Color(0xFF1B2547);
+  static const Color primaryLight = Color(0xFFE4E7F3);
 
-  static const Color secondary = Color(0xFF1E3A8A);
-  static const Color secondaryLight = Color(0xFFDBEAFE);
+  // Rust / terracotta — the weft thread. Secondary.
+  static const Color secondary = Color(0xFFC1502E);
+  static const Color secondaryLight = Color(0xFFF6E1D6);
 
-  static const Color accent = Color(0xFFF59E0B);
-  static const Color accentLight = Color(0xFFFEF3C7);
+  // Antique gold — thread highlight. Accent.
+  static const Color accent = Color(0xFFC98A2C);
+  static const Color accentLight = Color(0xFFF6E9CE);
 
-  static const Color background = Color(0xFFF8FAFC);
-  static const Color card = Color(0xFFFFFFFF);
+  // Handloom cream surfaces.
+  static const Color background = Color(0xFFF8F4EC);
+  static const Color card = Color(0xFFFFFDF8);
 
-  static const Color success = Color(0xFF16A34A);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color error = Color(0xFFEF4444);
-  static const Color info = Color(0xFF1E3A8A);
+  static const Color success = Color(0xFF3F7A4E);
+  static const Color warning = Color(0xFFC98A2C);
+  static const Color error = Color(0xFFB3412B);
+  static const Color info = Color(0xFF2B3A67);
 
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color textMuted = Color(0xFF94A3B8);
-  static const Color border = Color(0xFFE2E8F0);
+  static const Color textPrimary = Color(0xFF241F1B);
+  static const Color textSecondary = Color(0xFF6E655B);
+  static const Color textMuted = Color(0xFFA79C8C);
+  static const Color border = Color(0xFFE8DFCD);
 
-  // Dark mode
-  static const Color backgroundDark = Color(0xFF0B1220);
-  static const Color cardDark = Color(0xFF141B2D);
-  static const Color borderDark = Color(0xFF263043);
-  static const Color textPrimaryDark = Color(0xFFF1F5F9);
-  static const Color textSecondaryDark = Color(0xFF94A3B8);
+  // Dark mode — deep indigo night instead of default slate.
+  static const Color backgroundDark = Color(0xFF12162A);
+  static const Color cardDark = Color(0xFF1C2140);
+  static const Color borderDark = Color(0xFF2E3559);
+  static const Color textPrimaryDark = Color(0xFFF3EEE2);
+  static const Color textSecondaryDark = Color(0xFFB3ADC7);
 
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [primary, primaryDark],
@@ -39,39 +47,41 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  // Rich multi-stop "aurora" gradient — emerald sliding into violet and deep
-  // blue. Used for hero/decorative surfaces so they read as a signature
-  // brand moment rather than a flat two-tone fill.
+  // Signature "dip-dye" gradient — indigo bleeding through plum into rust,
+  // mimicking the blurred resist-dye transitions of an ikat weave. Used for
+  // hero/decorative surfaces so they read as a brand moment, not a flat fill.
   static const LinearGradient heroGradient = LinearGradient(
-    colors: [Color(0xFF059669), Color(0xFF0891B2), Color(0xFF4338CA)],
+    colors: [Color(0xFF23305C), Color(0xFF5C3A63), Color(0xFFC1502E)],
     stops: [0.0, 0.55, 1.0],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient goldGradient = LinearGradient(
-    colors: [Color(0xFFFBBF24), Color(0xFFF59E0B), Color(0xFFD97706)],
+    colors: [Color(0xFFEACB7C), Color(0xFFC98A2C), Color(0xFF9C6B1F)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  // Violet-magenta accent used sparingly for special/decorative moments
-  // (splash background, occasion tiles, badges) — pairs with heroGradient.
+  // Plum-to-rust accent thread — pairs with heroGradient for special /
+  // decorative moments (splash rings, occasion tiles, badges).
   static const LinearGradient auroraGradient = LinearGradient(
-    colors: [Color(0xFF7C3AED), Color(0xFFC026D3), Color(0xFFF59E0B)],
+    colors: [Color(0xFF5B3B6B), Color(0xFFA6473F), Color(0xFFC98A2C)],
     stops: [0.0, 0.6, 1.0],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient sunsetGradient = LinearGradient(
-    colors: [Color(0xFFF97316), Color(0xFFDB2777)],
+    colors: [Color(0xFFC1502E), Color(0xFFE0954A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
+  // "Mahanadi" river gradient — teal-indigo, used where the palette needs a
+  // cooler beat (e.g. an onboarding page) without reaching for blue.
   static const LinearGradient oceanGradient = LinearGradient(
-    colors: [Color(0xFF0EA5E9), Color(0xFF6366F1)],
+    colors: [Color(0xFF0E6E77), Color(0xFF2B3A67)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

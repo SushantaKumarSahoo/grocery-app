@@ -34,10 +34,12 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE addresses ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: a user can only see/edit their own profile
+DROP POLICY IF EXISTS "Profiles are self-managed" ON profiles;
 CREATE POLICY "Profiles are self-managed" ON profiles
   FOR ALL USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
 -- Addresses: a user can only see/edit their own addresses
+DROP POLICY IF EXISTS "Addresses are self-managed" ON addresses;
 CREATE POLICY "Addresses are self-managed" ON addresses
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
@@ -48,16 +50,19 @@ CREATE POLICY "Addresses are self-managed" ON addresses
 --  "Allow all for authenticated" policies on orders/order_items/quotations.)
 
 DROP POLICY IF EXISTS "Allow all for authenticated" ON orders;
+DROP POLICY IF EXISTS "Shop owners manage their shop orders" ON orders;
 CREATE POLICY "Shop owners manage their shop orders" ON orders
   FOR ALL USING (
     shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
   ) WITH CHECK (
     shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
   );
+DROP POLICY IF EXISTS "Customers manage their own orders" ON orders;
 CREATE POLICY "Customers manage their own orders" ON orders
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Allow all for authenticated" ON order_items;
+DROP POLICY IF EXISTS "Order items follow parent order access" ON order_items;
 CREATE POLICY "Order items follow parent order access" ON order_items
   FOR ALL USING (
     order_id IN (
@@ -74,6 +79,12 @@ CREATE POLICY "Order items follow parent order access" ON order_items
   );
 
 DROP POLICY IF EXISTS "Allow all for authenticated" ON quotations;
+DROP POLICY IF EXISTS "Quotations follow parent order access" ON quotations;
+-- WITH CHECK must mirror USING: customers only change status/notes (accept,
+-- reject, request-change) and never shop_id, so they need to pass the same
+-- parent-order check on UPDATE as they do to read the row. A WITH CHECK
+-- scoped to shop owners only (as before) silently rejects every customer
+-- accept/reject/request-change action with an RLS violation.
 CREATE POLICY "Quotations follow parent order access" ON quotations
   FOR ALL USING (
     order_id IN (
@@ -82,7 +93,11 @@ CREATE POLICY "Quotations follow parent order access" ON quotations
          OR shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
     )
   ) WITH CHECK (
-    shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
+    order_id IN (
+      SELECT id FROM orders
+      WHERE user_id = auth.uid()
+         OR shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
+    )
   );
 
 -- Products/categories/shops stay readable by any authenticated user (browsing catalog)

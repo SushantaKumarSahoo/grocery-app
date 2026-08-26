@@ -8,8 +8,10 @@ import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/catalog_provider.dart';
+import 'providers/location_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/locale_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,12 +19,18 @@ void main() async {
   // Loaded before runApp so the correct theme paints on the very first
   // frame — no flash of light mode while a saved dark preference loads.
   final savedThemeMode = await AppThemeProvider.loadSavedMode();
-  runApp(MainApp(initialThemeMode: savedThemeMode));
+  final savedLanguage = await LocaleProvider.loadSavedLanguage();
+  runApp(MainApp(initialThemeMode: savedThemeMode, initialLanguage: savedLanguage));
 }
 
 class MainApp extends StatelessWidget {
   final ThemeMode initialThemeMode;
-  const MainApp({super.key, required this.initialThemeMode});
+  final AppLanguage initialLanguage;
+  const MainApp({
+    super.key,
+    required this.initialThemeMode,
+    required this.initialLanguage,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +40,9 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => CatalogProvider()),
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => AppThemeProvider(initialMode: initialThemeMode)),
+        ChangeNotifierProvider(create: (_) => LocaleProvider(initialLanguage: initialLanguage)),
       ],
       child: const _AppRoot(),
     );
@@ -53,7 +63,10 @@ class _AppRoot extends StatefulWidget {
 }
 
 class _AppRootState extends State<_AppRoot> {
-  late final GoRouter _router = AppRouter.build(context.read<AuthProvider>());
+  late final GoRouter _router = AppRouter.build(
+    context.read<AuthProvider>(),
+    context.read<LocationProvider>(),
+  );
 
   @override
   Widget build(BuildContext context) {

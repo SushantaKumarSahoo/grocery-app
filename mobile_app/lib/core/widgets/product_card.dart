@@ -32,6 +32,11 @@ class ProductCard extends StatelessWidget {
             : Image.network(
                 product.imageUrl,
                 fit: BoxFit.cover,
+                // Decode at display size, not source size — an
+                // un-downsampled multi-megapixel upload decoded per grid
+                // tile is a common cause of scroll jank/OOM on low-end
+                // devices.
+                cacheWidth: (280 * MediaQuery.of(context).devicePixelRatio).round(),
                 loadingBuilder: (context, child, progress) {
                   if (progress == null) return child;
                   return Container(color: colors.border);
@@ -65,7 +70,7 @@ class ProductCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
+                    fontSize: 14.5,
                     color: colors.textPrimary,
                   ),
                 ),
@@ -73,7 +78,7 @@ class ProductCard extends StatelessWidget {
                 Text(
                   'MOQ ${product.minOrderQty.toStringAsFixed(0)} ${product.unit}',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: colors.textMuted,
                   ),
                 ),
@@ -89,14 +94,14 @@ class ProductCard extends StatelessWidget {
                             style: const TextStyle(
                               color: AppColors.primaryDark,
                               fontWeight: FontWeight.w800,
-                              fontSize: 15,
+                              fontSize: 16.5,
                             ),
                           ),
                           TextSpan(
                             text: '/${product.unit}',
                             style: TextStyle(
                               color: colors.textMuted,
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -106,11 +111,18 @@ class ProductCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryLight,
+                        gradient: AppColors.goldGradient,
                         borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.accent.withValues(alpha: 0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: const Icon(Icons.add_rounded,
-                          size: 16, color: AppColors.primaryDark),
+                          size: 16, color: Colors.white),
                     ),
                   ],
                 ),

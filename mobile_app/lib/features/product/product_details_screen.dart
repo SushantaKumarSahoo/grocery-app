@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_ext.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/product_card.dart';
@@ -46,14 +47,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     super.dispose();
   }
 
-  double get _step => widget.product.unit.toLowerCase() == 'piece' ? 50 : 5;
-
-  List<double> get _quickPicks {
-    final moq = widget.product.minOrderQty;
-    final picks = {moq, moq * 2, moq * 5};
-    return picks.toList()..sort();
-  }
-
   @override
   Widget build(BuildContext context) {
     final p = widget.product;
@@ -67,6 +60,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           SliverAppBar(
             expandedHeight: 340,
             pinned: true,
+            stretch: true,
+            stretchTriggerOffset: 120,
+            onStretchTrigger: () async {},
             elevation: 0,
             backgroundColor: colors.bg,
             surfaceTintColor: Colors.transparent,
@@ -92,6 +88,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         : Image.network(
                             p.imageUrl,
                             fit: BoxFit.cover,
+                            cacheWidth: (MediaQuery.sizeOf(context).width *
+                                    MediaQuery.of(context).devicePixelRatio)
+                                .round(),
                             errorBuilder: (c, e, s) => Container(
                               color: AppColors.primaryLight,
                               child: const Icon(Icons.image_not_supported_rounded,
@@ -164,9 +163,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       Expanded(
                         child: Text(
                           p.name,
-                          style: TextStyle(
+                          style: AppFonts.display(
                             fontSize: 22,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             color: colors.textPrimary,
                             height: 1.15,
                           ),
@@ -403,44 +402,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             QtyStepper(
                               value: _qty,
                               min: p.minOrderQty,
-                              step: _step,
                               onChanged: (v) => setState(() => _qty = v),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _quickPicks.map((q) {
-                            final selected = _qty == q;
-                            return Tappable(
-                              onTap: () => setState(() => _qty = q),
-                              pressedScale: 0.94,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                                decoration: BoxDecoration(
-                                  color: selected
-                                      ? AppColors.primary.withValues(alpha: 0.14)
-                                      : colors.card,
-                                  borderRadius: BorderRadius.circular(100),
-                                  border: Border.all(
-                                    color: selected ? AppColors.primary : colors.border,
-                                  ),
-                                ),
-                                child: Text(
-                                  '${q.toStringAsFixed(0)} ${p.unit}',
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: selected ? AppColors.primary : colors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
                         ),
                       ],
                     ),

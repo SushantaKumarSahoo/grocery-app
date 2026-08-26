@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_ext.dart';
 import '../../../core/widgets/animated_blobs.dart';
+import '../../../core/widgets/ikat_pattern.dart';
 
 class AuthScaffold extends StatelessWidget {
   final String title;
@@ -38,6 +39,13 @@ class AuthScaffold extends StatelessWidget {
               ),
             ),
           ),
+          Positioned.fill(
+            child: IkatWeaveBackdrop(
+              color: AppColors.primary,
+              opacity: colors.isDark ? 0.09 : 0.08,
+              spacing: 30,
+            ),
+          ),
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
@@ -54,16 +62,17 @@ class AuthScaffold extends StatelessWidget {
                       borderRadius: BorderRadius.circular(18),
                       boxShadow: AppShadows.glow(AppColors.primary),
                     ),
-                    child: const Icon(Icons.shopping_basket_rounded,
-                        color: Colors.white, size: 30),
+                    child: const Center(
+                      child: IkatRosette(size: 32, color: Colors.white, strokeWidth: 2),
+                    ),
                   ).animate().fadeIn(duration: 400.ms).scale(
                       begin: const Offset(0.8, 0.8), end: const Offset(1, 1)),
                   const SizedBox(height: 24),
                   Text(
                     title,
-                    style: TextStyle(
+                    style: AppFonts.display(
                       fontSize: 26,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       color: colors.textPrimary,
                     ),
                   ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.2, end: 0),

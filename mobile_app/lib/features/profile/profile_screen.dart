@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../core/l10n/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_ext.dart';
 import '../../core/widgets/screen_backdrop.dart';
 import '../../core/widgets/tappable.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../providers/theme_provider.dart';
 import 'edit_profile_sheet.dart';
 
@@ -18,10 +20,11 @@ class ProfileScreen extends StatelessWidget {
     final profile = context.watch<AuthProvider>().profile;
     final colors = context.colors;
     final isDark = context.watch<AppThemeProvider>().mode == ThemeMode.dark;
+    final lang = context.watch<LocaleProvider>().language;
 
     return Scaffold(
       backgroundColor: colors.bg,
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text(t(lang, 'profile'))),
       body: ScreenBackdrop(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -87,33 +90,41 @@ class ProfileScreen extends StatelessWidget {
             _menuTile(
               context,
               Icons.location_on_outlined,
-              'Addresses',
-              'Manage saved delivery addresses',
+              t(lang, 'addresses'),
+              t(lang, 'addresses_subtitle'),
               () => context.push('/addresses'),
               index: 0,
             ),
             _menuTile(
               context,
               Icons.history_rounded,
-              'My Orders',
-              'View your complete order history',
-              () => context.go('/home'),
+              t(lang, 'my_orders'),
+              t(lang, 'my_orders_subtitle'),
+              () => context.push('/orders'),
               index: 1,
             ),
             _menuTile(
               context,
               Icons.support_agent_rounded,
-              'Support',
-              'Chat with our support team',
+              t(lang, 'support'),
+              t(lang, 'support_subtitle'),
               () => context.push('/support'),
               index: 2,
             ),
-            _darkModeTile(context, isDark, index: 3),
+            _darkModeTile(context, isDark, lang, index: 3),
+            _menuTile(
+              context,
+              Icons.translate_rounded,
+              t(lang, 'language'),
+              lang == AppLanguage.odia ? t(lang, 'odia') : t(lang, 'english'),
+              () => _showLanguageSheet(context, lang),
+              index: 4,
+            ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => context.read<AuthProvider>().logout(),
               icon: const Icon(Icons.logout_rounded),
-              label: const Text('Log Out'),
+              label: Text(t(lang, 'log_out')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
                 side: const BorderSide(color: AppColors.error),
@@ -132,7 +143,8 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _darkModeTile(
     BuildContext context,
-    bool isDark, {
+    bool isDark,
+    AppLanguage lang, {
     required int index,
   }) {
     final colors = context.colors;
@@ -176,7 +188,7 @@ class ProfileScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Dark Mode',
+                        t(lang, 'dark_mode'),
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
@@ -185,7 +197,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Toggle the app appearance',
+                        t(lang, 'dark_mode_subtitle'),
                         style: TextStyle(
                           fontSize: 11.5,
                           color: colors.textMuted,
@@ -279,5 +291,108 @@ class ProfileScreen extends StatelessWidget {
         .animate()
         .fadeIn(delay: (60 * index).ms, duration: 300.ms)
         .slideX(begin: 0.05, end: 0, delay: (60 * index).ms, duration: 300.ms);
+  }
+
+  void _showLanguageSheet(BuildContext context, AppLanguage current) {
+    final localeProvider = context.read<LocaleProvider>();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final colors = sheetContext.colors;
+        return SafeArea(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t(current, 'choose_language'),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _languageOption(
+                  sheetContext,
+                  label: t(current, 'english'),
+                  selected: current == AppLanguage.english,
+                  onTap: () {
+                    localeProvider.setLanguage(AppLanguage.english);
+                    Navigator.of(sheetContext).pop();
+                  },
+                ),
+                const SizedBox(height: 10),
+                _languageOption(
+                  sheetContext,
+                  label: t(current, 'odia'),
+                  selected: current == AppLanguage.odia,
+                  onTap: () {
+                    localeProvider.setLanguage(AppLanguage.odia);
+                    Navigator.of(sheetContext).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _languageOption(
+    BuildContext context, {
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final colors = context.colors;
+    return Tappable(
+      onTap: onTap,
+      pressedScale: 0.98,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          color: selected
+              ? (colors.isDark
+                  ? AppColors.primary.withValues(alpha: 0.18)
+                  : AppColors.primaryLight)
+              : colors.bg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected ? AppColors.primary : colors.border,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ),
+            Icon(
+              selected
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_off_rounded,
+              color: selected ? AppColors.primary : colors.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

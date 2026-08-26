@@ -1,18 +1,39 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Settings,
-  FileText, Store, BarChart3, LifeBuoy
+  FileText, Store, BarChart3, LifeBuoy, MapPin, Wallet
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { fetchPendingOrdersCount } from '../lib/api';
+import { useShop } from '../context/ShopContext';
 
 interface SidebarProps {
   role: 'admin' | 'super-admin';
 }
 
 export default function Sidebar({ role }: SidebarProps) {
+  const { shop } = useShop();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    // Only fetch if super-admin OR (admin AND shop is loaded)
+    if (role === 'admin' && !shop) return;
+    
+    let isMounted = true;
+    async function getCount() {
+      const count = await fetchPendingOrdersCount(role === 'admin' ? shop?.id : undefined);
+      if (isMounted) setPendingCount(count);
+    }
+    
+    getCount();
+    const interval = setInterval(getCount, 30000); // Check every 30s
+    return () => { isMounted = false; clearInterval(interval); };
+  }, [role, shop]);
+
   const adminLinks = [
     { name: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={20} /> },
     { name: 'Products', path: '/admin/products', icon: <Package size={20} /> },
-    { name: 'Bulk Orders', path: '/admin/orders', icon: <ShoppingCart size={20} /> },
+    { name: 'Bulk Orders', path: '/admin/orders', icon: <ShoppingCart size={20} />, badge: pendingCount },
     { name: 'Quotations', path: '/admin/quotations', icon: <FileText size={20} /> },
     { name: 'Customers', path: '/admin/customers', icon: <Users size={20} /> },
     { name: 'Support', path: '/admin/support', icon: <LifeBuoy size={20} /> },
@@ -20,10 +41,12 @@ export default function Sidebar({ role }: SidebarProps) {
   ];
 
   const superAdminLinks = [
-    { name: 'Dashboard', path: '/super-admin', icon: <LayoutDashboard size={20} /> },
+    { name: 'Dashboard', path: '/super-admin', icon: <LayoutDashboard size={20} />, badge: pendingCount },
     { name: 'Shops', path: '/super-admin/shops', icon: <ShoppingCart size={20} /> },
     { name: 'Admins', path: '/super-admin/admins', icon: <Users size={20} /> },
     { name: 'Analytics', path: '/super-admin/analytics', icon: <BarChart3 size={20} /> },
+    { name: 'Serviceable Areas', path: '/super-admin/serviceable-areas', icon: <MapPin size={20} /> },
+    { name: 'Payments', path: '/super-admin/payments', icon: <Wallet size={20} /> },
     { name: 'Support', path: '/super-admin/support', icon: <LifeBuoy size={20} /> },
     { name: 'Settings', path: '/super-admin/settings', icon: <Settings size={20} /> },
   ];
@@ -57,7 +80,12 @@ export default function Sidebar({ role }: SidebarProps) {
             }
           >
             {link.icon}
-            {link.name}
+            <span className="flex-1">{link.name}</span>
+            {link.badge && link.badge > 0 ? (
+              <span className="bg-error text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {link.badge}
+              </span>
+            ) : null}
           </NavLink>
         ))}
       </nav>

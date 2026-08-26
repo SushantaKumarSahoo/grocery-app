@@ -11,14 +11,14 @@ class SemanticColors {
   Color get bg => isDark ? AppColors.backgroundDark : AppColors.background;
   Color get card => isDark ? AppColors.cardDark : AppColors.card;
   Color get cardAlt =>
-      isDark ? const Color(0xFF1B2438) : const Color(0xFFF1F5F9);
+      isDark ? const Color(0xFF262C4E) : const Color(0xFFF1E9D8);
   Color get border => isDark ? AppColors.borderDark : AppColors.border;
   Color get textPrimary =>
       isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
   Color get textSecondary =>
       isDark ? AppColors.textSecondaryDark : AppColors.textSecondary;
   Color get textMuted =>
-      isDark ? const Color(0xFF64748B) : AppColors.textMuted;
+      isDark ? const Color(0xFF8B84A0) : AppColors.textMuted;
   Color get shadow => isDark
       ? Colors.black.withValues(alpha: 0.35)
       : Colors.black.withValues(alpha: 0.05);

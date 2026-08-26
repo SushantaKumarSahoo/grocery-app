@@ -39,23 +39,6 @@ export default function Admins() {
         <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-16 bg-bg-hover rounded-md animate-pulse" />)}</div>
       ) : filtered.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Main Super Admin User (Hardcoded Example for UI) */}
-          <div className="card border-primary/30 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">
-                  SA
-                </div>
-                <div>
-                  <h3 className="font-semibold">Super Admin</h3>
-                  <div className="flex items-center gap-1 text-xs text-text-muted mt-1"><Mail size={12} /> admin@bulkbasket.com</div>
-                </div>
-              </div>
-              <span className="badge badge-primary text-xs">Platform Admin</span>
-            </div>
-          </div>
-
           {/* Shop Owners */}
           {filtered.map((admin, idx) => (
             <div key={idx} className="card hover:border-border/80">

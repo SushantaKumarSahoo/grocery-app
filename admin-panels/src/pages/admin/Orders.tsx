@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Search, Eye, ShoppingCart, Calendar, MapPin, Users as UsersIcon, X, Send, MessageCircle, ArrowRight, Ban } from 'lucide-react';
+import { Search, Eye, ShoppingCart, Calendar, MapPin, Users as UsersIcon, X, Send, MessageCircle, ArrowRight, Ban, Wallet } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 import {
-  fetchOrders, fetchOrderItems, updateOrderStatus,
+  fetchOrders, fetchOrderItems, updateOrderStatus, fetchOrderPaymentSummary,
   fetchOrderSupportTicket, fetchSupportMessages, sendSupportMessage,
 } from '../../lib/api';
 import EmptyState from '../../components/EmptyState';
@@ -13,15 +13,46 @@ const STATUS_COLORS: Record<string, string> = {
   preparing: 'badge-primary', ready: 'badge-success', delivered: 'badge-success', cancelled: 'badge-error',
 };
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  advance_online: 'Paid Online',
+  cod_cash: 'Cash on Delivery',
+  cod_cheque: 'Cheque on Delivery',
+};
+
 // The negotiation stages (pending -> quotation_sent -> accepted/cancelled)
 // are driven entirely by real events — building a quotation, or the
-// customer accepting/rejecting it in the app — never a manual pick here.
-// Once accepted, fulfillment only ever moves forward one step at a time.
+// customer accepting/rejecting it in the app. Two of the fulfillment
+// transitions are ALSO event-driven now, not manual: accepted->preparing
+// fires the moment the customer resolves the advance payment step (paid
+// online, or chose cash/cheque), and ready->delivered fires the same way
+// for the final payment. preparing->ready stays a manual click — the shop
+// still has to actually finish preparing the order.
 const FULFILLMENT_NEXT: Record<string, { next: string; label: string } | undefined> = {
-  accepted: { next: 'preparing', label: 'Start Preparing' },
   preparing: { next: 'ready', label: 'Mark Ready' },
-  ready: { next: 'delivered', label: 'Mark Delivered' },
 };
+
+function statusNote(order: any): string | null {
+  switch (order.status) {
+    case 'pending':
+      return 'Build a quotation from the Quotations page to move this forward.';
+    case 'quotation_sent':
+      return 'Waiting for the customer to accept the quotation in the app.';
+    case 'accepted':
+      return "Waiting for the customer to choose how to pay the advance in the app — moves to Preparing automatically once they do.";
+    case 'preparing':
+      return order.payment_method
+        ? `Moved to Preparing automatically — advance ${(PAYMENT_METHOD_LABELS[order.payment_method] || 'payment').toLowerCase()} confirmed.`
+        : null;
+    case 'ready':
+      return 'Waiting for the customer to complete the final payment in the app — moves to Delivered automatically once they do.';
+    case 'delivered':
+      return order.payment_status === 'paid'
+        ? 'Moved to Delivered automatically once the final payment was confirmed.'
+        : null;
+    default:
+      return null;
+  }
+}
 
 export default function Orders() {
   const { shop } = useShop();
@@ -31,6 +62,7 @@ export default function Orders() {
   const [activeTab, setActiveTab] = useState('all');
   const [viewOrder, setViewOrder] = useState<any>(null);
   const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [paymentSummary, setPaymentSummary] = useState<any>(null);
   const [ticket, setTicket] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -49,7 +81,9 @@ export default function Orders() {
     setViewOrder(order);
     setTicket(null);
     setMessages([]);
+    setPaymentSummary(null);
     try { setOrderItems(await fetchOrderItems(order.id)); } catch { setOrderItems([]); }
+    try { setPaymentSummary(await fetchOrderPaymentSummary(order.id)); } catch { /* no accepted quotation yet */ }
     setMessagesLoading(true);
     try {
       const t = await fetchOrderSupportTicket(order.id);
@@ -190,14 +224,37 @@ export default function Orders() {
                   <span className={`badge ${STATUS_COLORS[viewOrder.status] || 'badge-primary'}`}>
                     {viewOrder.status.replace('_', ' ')}
                   </span>
-                  {(viewOrder.status === 'pending' || viewOrder.status === 'quotation_sent') && (
-                    <span className="text-xs text-text-muted">
-                      {viewOrder.status === 'pending'
-                        ? 'Build a quotation from the Quotations page to move this forward.'
-                        : 'Waiting for the customer to accept the quotation in the app.'}
-                    </span>
+                  {statusNote(viewOrder) && (
+                    <span className="text-xs text-text-muted">{statusNote(viewOrder)}</span>
                   )}
                 </div>
+                {(['accepted', 'preparing', 'ready', 'delivered', 'cancelled'].includes(viewOrder.status) || viewOrder.payment_method) && (
+                  <div className="mb-3 p-3 bg-bg-hover rounded-md flex items-start gap-3 text-sm">
+                    <Wallet size={16} className="text-text-muted shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {viewOrder.payment_method ? PAYMENT_METHOD_LABELS[viewOrder.payment_method] || viewOrder.payment_method : 'Payment method not chosen yet'}
+                        </span>
+                        {viewOrder.payment_status && viewOrder.payment_status !== 'not_required' && (
+                          <span className={`badge ${
+                            viewOrder.payment_status === 'paid' ? 'badge-success'
+                            : viewOrder.payment_status === 'failed' ? 'badge-error'
+                            : 'badge-warning'
+                          }`}>
+                            {viewOrder.payment_status}
+                          </span>
+                        )}
+                      </p>
+                      {paymentSummary && (
+                        <p className="text-xs text-text-muted mt-1">
+                          ₹{(paymentSummary.total_paid || 0).toLocaleString('en-IN')} paid of ₹{(paymentSummary.grand_total || 0).toLocaleString('en-IN')}
+                          {paymentSummary.remaining_amount > 0 && ` · ₹${paymentSummary.remaining_amount.toLocaleString('en-IN')} remaining`}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2">
                   {FULFILLMENT_NEXT[viewOrder.status] && (
                     <button

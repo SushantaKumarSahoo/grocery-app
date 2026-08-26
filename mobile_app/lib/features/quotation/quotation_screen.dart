@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_ext.dart';
@@ -64,12 +65,19 @@ class _QuotationScreenState extends State<QuotationScreen> {
     if (note == null || note.isEmpty || !mounted) return;
     final orderProvider = context.read<OrderProvider>();
     final messenger = ScaffoldMessenger.of(context);
-    await orderProvider.requestModification(quotation.id, note);
-    if (!mounted) return;
-    _reload();
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Modification request sent to shop owner')),
-    );
+    try {
+      await orderProvider.requestModification(quotation.id, note);
+      if (!mounted) return;
+      _reload();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Modification request sent to shop owner')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Could not send your request. Please try again.')),
+      );
+    }
   }
 
   @override
@@ -275,17 +283,30 @@ class _QuotationScreenState extends State<QuotationScreen> {
                     icon: Icons.check_circle_outline_rounded,
                     loading: _busy,
                     onPressed: () async {
+                      final router = GoRouter.of(context);
+                      final messenger = ScaffoldMessenger.of(context);
                       setState(() => _busy = true);
-                      await context.read<OrderProvider>().acceptQuotation(
-                        q,
-                        order.id,
-                      );
-                      if (!mounted) return;
-                      setState(() => _busy = false);
-                      _reload();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Quotation accepted')),
-                      );
+                      try {
+                        await context.read<OrderProvider>().acceptQuotation(
+                          q,
+                          order.id,
+                        );
+                        if (!mounted) return;
+                        _reload();
+                        // Next stop is choosing how to pay the advance —
+                        // no snackbar needed, the payment screen makes the
+                        // acceptance obvious on its own.
+                        router.push('/payment/${order.id}');
+                      } catch (_) {
+                        if (!mounted) return;
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Could not accept quotation. Please try again.'),
+                          ),
+                        );
+                      } finally {
+                        if (mounted) setState(() => _busy = false);
+                      }
                     },
                   ),
                   const SizedBox(height: 12),
@@ -294,14 +315,25 @@ class _QuotationScreenState extends State<QuotationScreen> {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () async {
+                            final messenger = ScaffoldMessenger.of(context);
                             setState(() => _busy = true);
-                            await context.read<OrderProvider>().rejectQuotation(
-                              q,
-                              order.id,
-                            );
-                            if (!mounted) return;
-                            setState(() => _busy = false);
-                            _reload();
+                            try {
+                              await context.read<OrderProvider>().rejectQuotation(
+                                q,
+                                order.id,
+                              );
+                              if (!mounted) return;
+                              _reload();
+                            } catch (_) {
+                              if (!mounted) return;
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text('Could not reject quotation. Please try again.'),
+                                ),
+                              );
+                            } finally {
+                              if (mounted) setState(() => _busy = false);
+                            }
                           },
                           icon: const Icon(
                             Icons.close_rounded,

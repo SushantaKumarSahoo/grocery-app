@@ -9,6 +9,7 @@ interface AuthContextType {
   loading: boolean;
   isSuperAdmin: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   isSuperAdmin: false,
   signInWithGoogle: async () => {},
+  signInWithPassword: async () => ({ error: null }),
   signOut: async () => {},
 });
 
@@ -41,7 +43,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (previousUserId.current !== (currentUser?.id ?? null)) {
         previousUserId.current = currentUser?.id ?? null;
-        setUser(currentUser);
         
         if (currentUser?.email) {
           const adminStatus = await checkIsSuperAdmin(currentUser.email);
@@ -49,6 +50,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           setIsSuperAdmin(false);
         }
+        
+        setUser(currentUser);
       }
       
       setLoading(false);
@@ -82,13 +85,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  const signInWithPassword = async (email: string, password: string) => {
+    if (!supabase) return { error: new Error("Supabase is not configured.") };
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
+  };
+
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isSuperAdmin, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isSuperAdmin, signInWithGoogle, signInWithPassword, signOut }}>
       {children}
     </AuthContext.Provider>
   );

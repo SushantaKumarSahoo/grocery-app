@@ -22,6 +22,9 @@ export default function Quotations() {
   const [gstPercent, setGstPercent] = useState('18');
   const [discountPercent, setDiscountPercent] = useState('0');
   const [notes, setNotes] = useState('');
+  const [advanceAmount, setAdvanceAmount] = useState('0');
+  const [advanceTouched, setAdvanceTouched] = useState(false);
+  const [builderError, setBuilderError] = useState('');
 
   useEffect(() => { if (shop) load(); }, [shop]);
 
@@ -54,15 +57,27 @@ export default function Quotations() {
   function openBuilder(order: any, revisionOf: any = null) {
     setSelectedOrder(order);
     setRevising(revisionOf);
+    setBuilderError('');
     if (revisionOf) {
       setItems((revisionOf.items || []).map((i: any) => ({ ...i })));
       setTransport(String(revisionOf.transport_charge ?? 0));
       setGstPercent(String(revisionOf.gst_percent ?? 18));
       setDiscountPercent(String(revisionOf.discount_percent ?? 0));
       setNotes('');
+      // A previously-set advance carries over as-is; otherwise fall back
+      // to the live 25%-of-total default below.
+      if (revisionOf.advance_amount) {
+        setAdvanceAmount(String(revisionOf.advance_amount));
+        setAdvanceTouched(true);
+      } else {
+        setAdvanceAmount('0');
+        setAdvanceTouched(false);
+      }
     } else {
       setItems(products.slice(0, 3).map(p => ({ product_name: p.name, quantity: p.min_order_qty || 1, unit: p.unit, price_per_unit: p.price })));
       setTransport('0'); setGstPercent('18'); setDiscountPercent('0'); setNotes('');
+      setAdvanceAmount('0');
+      setAdvanceTouched(false);
     }
     setShowBuilder(true);
   }
@@ -86,9 +101,25 @@ export default function Quotations() {
   const gstVal = (subtotal * (parseFloat(gstPercent) || 0)) / 100;
   const discountVal = (subtotal * (parseFloat(discountPercent) || 0)) / 100;
   const grandTotal = subtotal + transportVal + gstVal - discountVal;
+  const advanceVal = parseFloat(advanceAmount) || 0;
+
+  // Pre-fills the advance field at 25% of the running total so it's never
+  // accidentally left at ₹0 — recalculates live as line items/charges
+  // change, unless the admin has typed their own value.
+  useEffect(() => {
+    if (!advanceTouched && showBuilder) {
+      setAdvanceAmount(grandTotal > 0 ? String(Math.round(grandTotal * 0.25)) : '0');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grandTotal, advanceTouched, showBuilder]);
 
   async function handleSend() {
     if (!selectedOrder || items.length === 0) return;
+    setBuilderError('');
+    if (advanceVal < 0 || advanceVal > grandTotal) {
+      setBuilderError(`Advance amount must be between ₹0 and the grand total (₹${grandTotal.toLocaleString('en-IN')}).`);
+      return;
+    }
     setSaving(true);
     try {
       await createQuotation({
@@ -96,12 +127,12 @@ export default function Quotations() {
         items: items, subtotal, transport_charge: transportVal,
         gst_percent: parseFloat(gstPercent) || 0, gst_amount: gstVal,
         discount_percent: parseFloat(discountPercent) || 0, discount_amount: discountVal,
-        grand_total: grandTotal, notes, status: 'sent',
+        grand_total: grandTotal, advance_amount: advanceVal, notes, status: 'sent',
       });
       setShowBuilder(false);
       setRevising(null);
       await load();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { setBuilderError(e.message); }
     setSaving(false);
   }
 
@@ -243,7 +274,22 @@ export default function Quotations() {
                 <div className="input-group"><label className="input-label">Discount (%)</label><input type="number" value={discountPercent} onChange={e => setDiscountPercent(e.target.value)} className="input-field" /></div>
               </div>
 
+              <div className="input-group">
+                <label className="input-label">Advance Amount (₹)</label>
+                <input
+                  type="number"
+                  value={advanceAmount}
+                  onChange={e => { setAdvanceAmount(e.target.value); setAdvanceTouched(true); }}
+                  className="input-field"
+                />
+                <p className="text-xs text-text-muted mt-1">
+                  What the customer pays up front to confirm the order (defaults to 25% of the grand total). The rest is collected at delivery.
+                </p>
+              </div>
+
               <div className="input-group"><label className="input-label">Notes</label><textarea value={notes} onChange={e => setNotes(e.target.value)} className="input-field" rows={2} placeholder="Any additional notes..." /></div>
+
+              {builderError && <p className="text-error text-sm">{builderError}</p>}
 
               {/* Summary */}
               <div className="bg-bg-hover rounded-lg p-4 space-y-2">
@@ -251,6 +297,7 @@ export default function Quotations() {
                 <div className="flex justify-between text-sm"><span className="text-text-muted">Transport</span><span>₹{transportVal.toLocaleString('en-IN')}</span></div>
                 <div className="flex justify-between text-sm"><span className="text-text-muted">GST ({gstPercent}%)</span><span>₹{gstVal.toLocaleString('en-IN')}</span></div>
                 <div className="flex justify-between text-sm text-success"><span>Discount ({discountPercent}%)</span><span>-₹{discountVal.toLocaleString('en-IN')}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-text-muted">Advance to collect now</span><span>₹{advanceVal.toLocaleString('en-IN')}</span></div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-border"><span>Grand Total</span><span>₹{grandTotal.toLocaleString('en-IN')}</span></div>
               </div>
             </div>
@@ -284,6 +331,7 @@ export default function Quotations() {
                 <div className="flex justify-between text-sm"><span>Transport</span><span>₹{(viewQuote.transport_charge || 0).toLocaleString('en-IN')}</span></div>
                 <div className="flex justify-between text-sm"><span>GST ({viewQuote.gst_percent}%)</span><span>₹{(viewQuote.gst_amount || 0).toLocaleString('en-IN')}</span></div>
                 <div className="flex justify-between text-sm text-success"><span>Discount</span><span>-₹{(viewQuote.discount_amount || 0).toLocaleString('en-IN')}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-text-muted">Advance to collect now</span><span>₹{(viewQuote.advance_amount || 0).toLocaleString('en-IN')}</span></div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-border"><span>Grand Total</span><span>₹{(viewQuote.grand_total || 0).toLocaleString('en-IN')}</span></div>
               </div>
               {viewQuote.notes && <div className="p-3 bg-bg-hover rounded text-sm"><strong>Notes:</strong> {viewQuote.notes}</div>}

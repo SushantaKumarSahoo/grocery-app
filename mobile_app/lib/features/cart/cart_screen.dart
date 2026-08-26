@@ -93,6 +93,7 @@ class CartScreen extends StatelessWidget {
                                       width: 64,
                                       height: 64,
                                       fit: BoxFit.cover,
+                                      cacheWidth: (64 * MediaQuery.of(context).devicePixelRatio).round(),
                                       errorBuilder: (c, e, s) => Container(
                                         width: 64,
                                         height: 64,
@@ -154,7 +155,6 @@ class CartScreen extends StatelessWidget {
                                       QtyStepper(
                                         value: item.quantity,
                                         min: item.product.minOrderQty,
-                                        step: 5,
                                         onChanged: (v) => context
                                             .read<CartProvider>()
                                             .updateQuantity(item.product.id, v),
@@ -198,7 +198,7 @@ class CartScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.bg,
       appBar: AppBar(title: const Text('Bulk Order Cart')),
-      body: ScreenBackdrop(child: body),
+      body: ScreenBackdrop(themed: true, child: body),
       bottomNavigationBar: cart.isEmpty
           ? null
           : Container(

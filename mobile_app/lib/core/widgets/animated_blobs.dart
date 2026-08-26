@@ -4,6 +4,12 @@ import 'package:flutter/material.dart';
 /// Soft, slowly-drifting translucent blobs used behind hero surfaces
 /// (splash screen, home banner) for a premium, "alive" background instead
 /// of a flat gradient fill.
+///
+/// This sits behind content on every [ScreenBackdrop] screen, so it must
+/// stay cheap: the blob layout is precomputed once (not rebuilt per frame)
+/// and repaints are quantized to ~12 steps/sec — imperceptible for motion
+/// this slow, but a large win on low-end GPUs versus repainting six
+/// full-screen radial gradients at the display's native 60/90/120Hz.
 class AnimatedBlobs extends StatefulWidget {
   final List<Color> colors;
   final double opacity;
@@ -40,22 +46,26 @@ class _AnimatedBlobsState extends State<AnimatedBlobs>
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          return CustomPaint(
-            painter: _BlobPainter(
-              t: _controller.value,
-              colors: widget.colors,
-              opacity: widget.opacity,
-            ),
-            size: Size.infinite,
-          );
-        },
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return CustomPaint(
+              painter: _BlobPainter(
+                t: _controller.value,
+                colors: widget.colors,
+                opacity: widget.opacity,
+              ),
+              size: Size.infinite,
+            );
+          },
+        ),
       ),
     );
   }
 }
+
+typedef _Blob = ({double dx, double dy, double r, double speed, int colorIndex});
 
 class _BlobPainter extends CustomPainter {
   final double t;
@@ -64,23 +74,24 @@ class _BlobPainter extends CustomPainter {
 
   _BlobPainter({required this.t, required this.colors, required this.opacity});
 
+  static const List<_Blob> _blobs = [
+    (dx: 0.10, dy: 0.10, r: 0.75, speed: 1.0, colorIndex: 0),
+    (dx: 0.90, dy: 0.08, r: 0.62, speed: -0.7, colorIndex: 1),
+    (dx: 0.85, dy: 0.55, r: 0.68, speed: 0.6, colorIndex: 2),
+    (dx: 0.12, dy: 0.55, r: 0.6, speed: -0.9, colorIndex: 1),
+    (dx: 0.5, dy: 0.92, r: 0.7, speed: 0.5, colorIndex: 0),
+    (dx: 0.55, dy: 0.3, r: 0.5, speed: -0.5, colorIndex: 2),
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
-    final blobs = [
-      (dx: 0.10, dy: 0.10, r: 0.75, speed: 1.0, colorIndex: 0),
-      (dx: 0.90, dy: 0.08, r: 0.62, speed: -0.7, colorIndex: 1 % colors.length),
-      (dx: 0.85, dy: 0.55, r: 0.68, speed: 0.6, colorIndex: 2 % colors.length),
-      (dx: 0.12, dy: 0.55, r: 0.6, speed: -0.9, colorIndex: 1 % colors.length),
-      (dx: 0.5, dy: 0.92, r: 0.7, speed: 0.5, colorIndex: 0),
-      (dx: 0.55, dy: 0.3, r: 0.5, speed: -0.5, colorIndex: 2 % colors.length),
-    ];
-
-    for (final b in blobs) {
+    for (final b in _blobs) {
+      final colorIndex = b.colorIndex % colors.length;
       final angle = t * 2 * math.pi * b.speed;
       final dx = b.dx * size.width + math.cos(angle) * size.width * 0.08;
       final dy = b.dy * size.height + math.sin(angle) * size.height * 0.08;
       final radius = b.r * size.shortestSide;
-      final color = colors[b.colorIndex];
+      final color = colors[colorIndex];
 
       final paint = Paint()
         ..shader = RadialGradient(
@@ -96,6 +107,14 @@ class _BlobPainter extends CustomPainter {
     }
   }
 
+  // Quantized to ~12 steps/sec over the 14s cycle: the drift is slow enough
+  // that this reads as continuous while cutting repaint frequency by 5-10x
+  // versus repainting on every vsync tick.
+  static const _stepsPerCycle = 168;
+
   @override
-  bool shouldRepaint(covariant _BlobPainter oldDelegate) => oldDelegate.t != t;
+  bool shouldRepaint(covariant _BlobPainter oldDelegate) =>
+      (oldDelegate.t * _stepsPerCycle).floor() != (t * _stepsPerCycle).floor() ||
+      oldDelegate.opacity != opacity ||
+      oldDelegate.colors != colors;
 }

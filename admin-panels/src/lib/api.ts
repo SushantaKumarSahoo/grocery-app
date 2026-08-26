@@ -77,6 +77,16 @@ export async function fetchOrders(shopId: string) {
   return data || [];
 }
 
+export async function fetchPendingOrdersCount(shopId?: string) {
+  if (!supabase) return 0;
+  let query = supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+  if (shopId) {
+    query = query.eq('shop_id', shopId);
+  }
+  const { count } = await query;
+  return count || 0;
+}
+
 export async function fetchOrderItems(orderId: string) {
   if (!supabase) return [];
   const { data } = await supabase.from('order_items').select('*').eq('order_id', orderId);
@@ -86,6 +96,22 @@ export async function fetchOrderItems(orderId: string) {
 export async function updateOrderStatus(id: string, status: string) {
   if (!supabase) return;
   await supabase.from('orders').update({ status }).eq('id', id);
+}
+
+// Payment progress for one order — remaining_amount is what's still owed
+// (0 once fully settled). payment_method/payment_status on the order row
+// itself (already included by fetchOrders' select('*')) cover the "how";
+// this covers the "how much is left".
+export async function fetchOrderPaymentSummary(orderId: string) {
+  if (!supabase) return null;
+  const { data } = await supabase.from('order_payment_summary').select('*').eq('order_id', orderId).maybeSingle();
+  return data;
+}
+
+export async function fetchOrderPayments(orderId: string) {
+  if (!supabase) return [];
+  const { data } = await supabase.from('payments').select('*').eq('order_id', orderId).order('created_at', { ascending: true });
+  return data || [];
 }
 
 // ---- CUSTOMERS ----
@@ -159,6 +185,40 @@ export async function fetchAllAdmins() {
   return data || [];
 }
 
+export async function fetchAllPlatformOrders() {
+  if (!supabase) return [];
+  const { data } = await supabase.from('orders').select('created_at, total_amount');
+  return data || [];
+}
+
+// ---- PAYMENTS / PAYOUTS ----
+export async function fetchShopPaymentBalances() {
+  if (!supabase) return [];
+  const { data } = await supabase.from('shop_payment_balances').select('*').order('pending_balance', { ascending: false });
+  return data || [];
+}
+
+export async function fetchShopPayouts(shopId: string) {
+  if (!supabase) return [];
+  const { data } = await supabase.from('shop_payouts').select('*').eq('shop_id', shopId).order('created_at', { ascending: false });
+  return data || [];
+}
+
+// Goes through the release_shop_payout() DB function rather than a raw
+// insert — it re-validates the amount against the shop's true pending
+// balance server-side (closes a double-click/race-condition hole a plain
+// client insert would have) and is the ONLY way shop_payouts gets written.
+export async function releaseShopPayout(shopId: string, amount: number, note: string) {
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('release_shop_payout', {
+    p_shop_id: shopId,
+    p_amount: amount,
+    p_note: note,
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function checkIsSuperAdmin(email: string) {
   if (!supabase || !email) return false;
   try {
@@ -167,6 +227,49 @@ export async function checkIsSuperAdmin(email: string) {
   } catch {
     return false;
   }
+}
+
+// ---- SERVICEABLE PINCODES ----
+export async function fetchServiceablePincodes() {
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from('serviceable_pincodes')
+    .select('*')
+    .order('created_at', { ascending: false });
+  return data || [];
+}
+
+export async function addServiceablePincode(pincode: {
+  pincode: string;
+  area_name?: string;
+  city?: string;
+}) {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('serviceable_pincodes')
+    .insert(pincode)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateServiceablePincode(id: string, updates: any) {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('serviceable_pincodes')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteServiceablePincode(id: string) {
+  if (!supabase) return;
+  const { error } = await supabase.from('serviceable_pincodes').delete().eq('id', id);
+  if (error) throw error;
 }
 
 // ---- SUPPORT ----

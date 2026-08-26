@@ -39,12 +39,37 @@ class AppShadows {
       ];
 }
 
+/// Display/headline font — a warm, slightly quirky serif (Fraunces) used
+/// sparingly for hero moments (brand wordmark, screen titles, section
+/// headers) so the app reads as deliberately designed rather than the
+/// single-geometric-sans look of most template UIs. Body text stays on the
+/// grotesque sans set as the theme's textTheme for legibility at small sizes.
+class AppFonts {
+  AppFonts._();
+
+  static TextStyle display({
+    double fontSize = 24,
+    FontWeight fontWeight = FontWeight.w700,
+    Color? color,
+    double? height,
+    double? letterSpacing,
+  }) =>
+      GoogleFonts.fraunces(
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        fontStyle: FontStyle.normal,
+        color: color,
+        height: height,
+        letterSpacing: letterSpacing,
+      );
+}
+
 class AppTheme {
   AppTheme._();
 
   static ThemeData light() {
     final base = ThemeData.light(useMaterial3: true);
-    final textTheme = GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(
+    final textTheme = GoogleFonts.manropeTextTheme(base.textTheme).apply(
       bodyColor: AppColors.textPrimary,
       displayColor: AppColors.textPrimary,
     );
@@ -65,7 +90,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.plusJakartaSans(
+        titleTextStyle: GoogleFonts.manrope(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
@@ -89,7 +114,7 @@ class AppTheme {
         fillColor: AppColors.card,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        hintStyle: GoogleFonts.plusJakartaSans(
+        hintStyle: GoogleFonts.manrope(
           color: AppColors.textMuted,
           fontSize: 14,
           fontWeight: FontWeight.w400,
@@ -120,7 +145,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          textStyle: GoogleFonts.plusJakartaSans(
+          textStyle: GoogleFonts.manrope(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -134,7 +159,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          textStyle: GoogleFonts.plusJakartaSans(
+          textStyle: GoogleFonts.manrope(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -143,12 +168,12 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+          textStyle: GoogleFonts.manrope(fontWeight: FontWeight.w600),
         ),
       ),
       chipTheme: base.chipTheme.copyWith(
         backgroundColor: AppColors.primaryLight,
-        labelStyle: GoogleFonts.plusJakartaSans(
+        labelStyle: GoogleFonts.manrope(
           color: AppColors.primaryDark,
           fontWeight: FontWeight.w600,
           fontSize: 12.5,
@@ -168,7 +193,7 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.textPrimary,
-        contentTextStyle: GoogleFonts.plusJakartaSans(color: Colors.white),
+        contentTextStyle: GoogleFonts.manrope(color: Colors.white),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -179,7 +204,7 @@ class AppTheme {
 
   static ThemeData dark() {
     final base = ThemeData.dark(useMaterial3: true);
-    final textTheme = GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(
+    final textTheme = GoogleFonts.manropeTextTheme(base.textTheme).apply(
       bodyColor: AppColors.textPrimaryDark,
       displayColor: AppColors.textPrimaryDark,
     );
@@ -200,7 +225,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.plusJakartaSans(
+        titleTextStyle: GoogleFonts.manrope(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimaryDark,
@@ -224,7 +249,7 @@ class AppTheme {
         fillColor: AppColors.cardDark,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        hintStyle: GoogleFonts.plusJakartaSans(
+        hintStyle: GoogleFonts.manrope(
           color: AppColors.textSecondaryDark,
           fontSize: 14,
         ),
@@ -250,7 +275,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          textStyle: GoogleFonts.plusJakartaSans(
+          textStyle: GoogleFonts.manrope(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),

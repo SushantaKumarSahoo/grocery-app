@@ -1,29 +1,54 @@
 import { useEffect, useState } from 'react';
 import { BarChart3, TrendingUp, Users, ShoppingCart } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { fetchAllShops } from '../../lib/api';
-
-const MOCK_MONTHLY_DATA = [
-  { name: 'Jan', revenue: 4000, orders: 240 },
-  { name: 'Feb', revenue: 3000, orders: 139 },
-  { name: 'Mar', revenue: 2000, orders: 980 },
-  { name: 'Apr', revenue: 2780, orders: 390 },
-  { name: 'May', revenue: 1890, orders: 480 },
-  { name: 'Jun', revenue: 2390, orders: 380 },
-  { name: 'Jul', revenue: 3490, orders: 430 },
-];
+import { fetchAllShops, fetchAllPlatformOrders } from '../../lib/api';
 
 export default function Analytics() {
   const [shops, setShops] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
-    try { setShops(await fetchAllShops()); } catch { /* ignore */ }
+    try { 
+      const [shopsData, ordersData] = await Promise.all([
+        fetchAllShops(),
+        fetchAllPlatformOrders()
+      ]);
+      setShops(shopsData);
+      setOrders(ordersData);
+    } catch { /* ignore */ }
     setLoading(false);
   }
+
+  // Calculate dynamic monthly revenue and orders for the past 6 months
+  const monthlyData = (() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        name: d.toLocaleString('default', { month: 'short' }),
+        year: d.getFullYear(),
+        month: d.getMonth(),
+        revenue: 0,
+        orders: 0
+      });
+    }
+
+    orders.forEach(order => {
+      const d = new Date(order.created_at);
+      const m = months.find(x => x.month === d.getMonth() && x.year === d.getFullYear());
+      if (m) {
+        m.orders += 1;
+        m.revenue += (Number(order.total_amount) || 0);
+      }
+    });
+
+    return months;
+  })();
 
   const totalRevenue = shops.reduce((sum, s) => sum + (Number(s.revenue) || 0), 0);
   const activeShops = shops.filter(s => s.status === 'active').length;
@@ -70,7 +95,7 @@ export default function Analytics() {
             <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500"><ShoppingCart size={20} /></div>
             <h3 className="font-semibold text-text-muted">Platform Orders</h3>
           </div>
-          <p className="text-2xl font-bold">3,039 <span className="text-sm font-normal text-text-muted">(Mock)</span></p>
+          <p className="text-2xl font-bold">{orders.length.toLocaleString('en-IN')}</p>
         </div>
       </div>
 
@@ -80,7 +105,7 @@ export default function Analytics() {
           <h3 className="font-semibold mb-6 flex items-center gap-2"><BarChart3 size={18} /> Platform Revenue Trend</h3>
           <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={MOCK_MONTHLY_DATA} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <AreaChart data={monthlyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#16A34A" stopOpacity={0.3} />

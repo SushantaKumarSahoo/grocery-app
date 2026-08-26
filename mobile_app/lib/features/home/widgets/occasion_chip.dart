@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/occasion_themes.dart';
 import '../../../core/theme/theme_ext.dart';
 import '../../../core/widgets/tappable.dart';
 import '../../../data/models/category.dart';
 
+/// Fallback cycle for any occasion that (unexpectedly) has no entry in
+/// [occasionTheme] — every occasion in the fixed taxonomy has one today, so
+/// this only guards against a future occasion being added without a theme.
 const List<LinearGradient> _occasionGradients = [
   AppColors.primaryGradient,
   AppColors.oceanGradient,
@@ -29,14 +33,21 @@ class OccasionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final gradient = _occasionGradients[index % _occasionGradients.length];
+    final theme = occasionTheme(occasion.name);
+    final gradient = theme != null
+        ? LinearGradient(
+            colors: [theme.colors[0], theme.colors[2]],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : _occasionGradients[index % _occasionGradients.length];
     final glowColor = gradient.colors.first;
 
     return Tappable(
       onTap: onTap,
       pressedScale: 0.92,
       child: SizedBox(
-        width: 78,
+        width: 82,
         child: Column(
           children: [
             AnimatedContainer(
@@ -60,7 +71,7 @@ class OccasionCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11.0,
+                  fontSize: 12.5,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                   color: selected ? AppColors.primary : colors.textPrimary,
                   height: 1.15,

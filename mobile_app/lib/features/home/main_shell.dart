@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../core/theme/theme_ext.dart';
 import '../../providers/cart_provider.dart';
 import 'home_screen.dart';
-import '../categories/categories_screen.dart';
 import '../cart/cart_screen.dart';
 import '../orders/orders_screen.dart';
 import '../profile/profile_screen.dart';
@@ -23,7 +22,6 @@ class _MainShellState extends State<MainShell> {
 
   final _pages = const [
     HomeScreen(),
-    CategoriesScreen(),
     CartScreen(embedded: true),
     OrdersScreen(),
     ProfileScreen(),
@@ -70,11 +68,6 @@ class _MainShellState extends State<MainShell> {
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
             label: 'Home',
-          ),
-          const NavItemData(
-            icon: Icons.grid_view_outlined,
-            activeIcon: Icons.grid_view_rounded,
-            label: 'Categories',
           ),
           NavItemData(
             icon: Icons.shopping_bag_outlined,
